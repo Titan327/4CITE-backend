@@ -1,6 +1,8 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../config/database");
 const Hotel = require("./hotel.model");
+const Picture = require("./picture.model");
+const Booking = require("./booking.model");
 
 const RoomModel = sequelize.define('Rooms', {
     id: {
@@ -8,7 +10,7 @@ const RoomModel = sequelize.define('Rooms', {
         autoIncrement: true,
         primaryKey: true
     },
-    hotel_Id: {
+    hotel_id: {
         type: DataTypes.INTEGER,
         references: {
             model: 'hotels',
@@ -43,7 +45,8 @@ const RoomModel = sequelize.define('Rooms', {
 
 
 RoomModel.associate = () => {
-    RoomModel.belongsTo(Hotel, { foreignKey: 'hotel_Id', as: 'hotel' });
+    RoomModel.belongsTo(Hotel, { foreignKey: 'hotel_id', as: 'hotel' });
+    RoomModel.hasMany(Picture, { foreignKey: "room_id", as: "room" });
 };
 
 module.exports = RoomModel;

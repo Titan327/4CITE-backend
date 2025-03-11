@@ -8,7 +8,7 @@ const PictureModel = sequelize.define('Pictures', {
         autoIncrement: true,
         primaryKey: true
     },
-    hotel_Id: {
+    hotel_id: {
         type: DataTypes.INTEGER,
         references: {
             model: 'hotels',
@@ -27,7 +27,7 @@ const PictureModel = sequelize.define('Pictures', {
 
 
 PictureModel.associate = () => {
-    PictureModel.belongsTo(Hotel, { foreignKey: 'hotel_Id', as: 'hotel' });
+    PictureModel.belongsTo(Hotel, { foreignKey: 'hotel_id', as: 'hotel' });
 };
 
 module.exports = PictureModel;

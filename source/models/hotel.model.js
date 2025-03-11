@@ -39,8 +39,8 @@ const HotelModel = sequelize.define('Hotels', {
 });
 
 HotelModel.associate = () => {
-    HotelModel.hasMany(Room, { foreignKey: "hotel_Id", as: "rooms" });
-    HotelModel.hasMany(Picture, { foreignKey: "hotel_Id", as: "pictures" });
+    HotelModel.hasMany(Room, { foreignKey: "hotel_id", as: "rooms" });
+    HotelModel.hasMany(Picture, { foreignKey: "hotel_id", as: "pictures" });
 };
 
 module.exports = HotelModel;
