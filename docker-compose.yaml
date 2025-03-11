@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  app_dev:
+    image: node:20
+    container_name: Akkor_backend_node
+    working_dir: /usr/src/app
+    volumes:
+      - ./source:/usr/src/app/
+      - ./.env:/usr/src/app/.env
+    ports:
+      - "3001:3000"
+    command: sh -c "npm install && npm run dev"
+    depends_on:
+      - db
+    profiles:
+      - dev
+
+  app_prod:
+    image: node:20
+    container_name: Akkor_backend_node
+    working_dir: /usr/src/app
+    volumes:
+      - ./source:/usr/src/app/
+      - ./.env:/usr/src/app/.env
+    ports:
+      - "3001:3000"
+    command: sh -c "npm install && npm run start"
+    depends_on:
+      - db
+    profiles:
+      - prod
+
+  db:
+    image: mysql:9
+    container_name: Akkor_backend_sql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: Akkor
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./data/db_data:/var/lib/mysql
+    profiles:
+      - dev
+      - prod
+
+volumes:
+  db_data:

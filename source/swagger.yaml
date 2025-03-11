@@ -1,0 +1,53 @@
+openapi: 3.0.0
+info:
+  title: Akkor API
+  description: API for Akkor hotel website.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3001/api
+paths:
+  /auth/register:
+    post:
+      summary: Register new user
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                pseudo:
+                  type: string
+                name:
+                  type: string
+                surname:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '201':
+          description: Registered user.
+
+  /auth/login:
+    post:
+      summary: Login user
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '201':
+          description: JWT
