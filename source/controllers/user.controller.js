@@ -4,7 +4,6 @@ require('dotenv').config();
 
 async function GetUserByField(req, res) {
     try {
-        console.log("ici");
         const param = req.query;
         const keyObj = Object.keys(param)
         const searchField = ['id', 'email', 'pseudo', 'name', 'surname'];
