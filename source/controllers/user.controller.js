@@ -2,70 +2,131 @@ const User = require('../models/user.model');
 const bcrypt = require("bcrypt");
 require('dotenv').config();
 
-
-async function createUser(req, res){
+async function GetUserByField(req, res) {
     try {
+        console.log("ici");
+        const param = req.query;
+        const keyObj = Object.keys(param)
+        const searchField = ['id', 'email', 'pseudo', 'name', 'surname'];
 
-        // regex 1 minuscule / 1 majuscule / 1 chiffre / 1 charactere spécial
-        const regexPswd = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-
-        const data = req.body;
-
-        if (data.name.length > 50){
-            return res.status(449).json({ error: "Name must be less than 50 character." });
-        }
-        if (data.surname.length > 20){
-            return res.status(449).json({ error: "Surname must be less than 20 character." });
-        }
-        if (data.pseudo.length > 20){
-            return res.status(449).json({ error: "Pseudo must be less than 20 character." });
-        }
-        if (data.email.length > 100){
-            return res.status(449).json({ error: "Email must be less than 100 character." });
+        if (!keyObj.every((key) => searchField.includes(key))){
+            return res.status(449).json({ error: "One of the fields cannot be used." });
         }
 
-        if (data.password.length < 8){
-            return res.status(449).json({ error: 'Password must be more than 8 character.' });
-        }
-        if (!regexPswd.test(data.password)){
-            return res.status(449).json({ error: 'The password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character.' });
-        }
+        if (keyObj.length !== 0){
 
-        const existing = await User.findOne({
-            where: {
-                email: data.email,
-            },
-        });
+            await User.findAll({
+                attributes: [
+                    'id',
+                    'email',
+                    'name',
+                    'surname',
+                    'pseudo',
+                    'role',
+                    'active',
+                    'createdAt',
+                ],
+                where:param
+            }).then((resultat) => {
 
-        if (!existing){
+                return res.status(200).json({ success: resultat });
 
-            const pswdHash = await bcrypt.hash(data.password, 10); // une complexité de 10 est suffisante.
+            }).catch((err) => {
+                return res.status(500).json({ error: "An error has occurred." });
 
-            await User.create({
-                email: data.email,
-                pseudo: data.pseudo,
-                password: pswdHash,
-                name: data.name,
-                surname: data.surname,
-                role: "user",
-                active: 1,
             });
 
-            return res.status(201).json({ success: "User created." });
-
         }else {
-
-            return res.status(449).json({ error: "Email already used." });
-
+            return res.status(500).json({error: "An error has occurred."});
         }
     } catch (error) {
-
-        return res.status(500).json({ error: "An error has occurred" });
-
+        return res.status(500).json({ error: 'An error has occurred.' });
     }
 }
 
+async function getMe(req, res) {
+    try {
+        const token_user = req.user;
+
+        await User.findOne({
+                where: {
+                    id : token_user.id
+                },
+                attributes: [
+                    'id',
+                    'email',
+                    'name',
+                    'surname',
+                    'pseudo',
+                    'role',
+                    'active',
+                    'createdAt',
+                    'updatedAt',
+                ]
+            }
+        ).then((result) => {
+            return res.status(200).json({ success: result });
+        }).catch(() => {
+            return res.status(500).json({ error: "An error has occurred." });
+        });
+    } catch (error) {
+        return res.status(500).json({ error: 'An error has occurred.' });
+    }
+}
+
+async function updateMe(req, res) {
+    try {
+        const userId = req.user.id;
+        const updatedField = req.body;
+        const keyObj = Object.keys(updatedField)
+        const modifField = [
+            'email',
+            'name',
+            'surname',
+            'pseudo',
+            'password',
+        ]; // champ possible a etre modifier
+
+        if (!keyObj.every((key) => modifField.includes(key))){
+            return res.status(449).json({ error: "One of the fields cannot be used." });
+        }
+
+        if (updatedField["password"]){
+            updatedField["password"] = await bcrypt.hash(updatedField["password"], 10);
+        }
+
+        await User.update(
+            updatedField,
+            {where: {id : userId}}
+        ).then(() => {
+            return res.status(200).json({ success: "User edit." });
+        }).catch(() => {
+            return res.status(500).json({ error: "An error has occurred." });
+        });
+    } catch (error) {
+        return res.status(500).json({ error: 'An error has occurred.' });
+    }
+}
+
+async function deleteMe(req, res) {
+    try {
+        const userId = req.user.id;
+
+        await User.destroy({
+            where: {id: userId}}
+        ).then(() => {
+            return res.status(200).json({success: "User deleted."});
+        }).catch(() => {
+            return res.status(500).json({error: "An error has occurred."});
+        });
+    } catch (error) {
+        return res.status(500).json({ error: "An error has occurred." });
+    }
+}
 
 module.exports = {
-    createUser,
+    GetUserByField,
+    getMe,
+    updateMe,
+    deleteMe,
 };

@@ -3,7 +3,6 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 require('dotenv').config();
 
-
 async function register(req, res){
     try {
         // regex 1 minuscule / 1 majuscule / 1 chiffre / 1 charactere spécial
@@ -86,10 +85,10 @@ async function login(req,res) {
             return res.status(449).json({ error: "Wrong password or email." });
         }
     } catch (error) {
+        console.log(error);
         return res.status(500).json({ error: "An error has occurred" });
     }
 }
-
 
 module.exports = {
     register,

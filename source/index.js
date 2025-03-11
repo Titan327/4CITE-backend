@@ -26,6 +26,8 @@ connectDB().then(() => {
 
 const authRoutes = require("./routes/auth.route");
 app.use("/api/auth", authRoutes);
+const userRoutes = require("./routes/user.route");
+app.use("/api/user", userRoutes);
 
 
 const PORT = process.env.EXPRESS_PORT;
