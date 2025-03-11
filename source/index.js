@@ -19,8 +19,8 @@ app.use(cors({
 app.use('/api/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
 
 connectDB().then(() => {
-    //sequelize.sync({ alter: true })
-    sequelize.sync({ force: true })
+    sequelize.sync({ alter: false })
+    //sequelize.sync({ force: true })
         .then(() => console.log("✅ Base de données synchronisée"))
         .catch(err => console.error("❌ Erreur de synchronisation :", err));
 });
@@ -33,6 +33,9 @@ app.use("/api/user", userRoutes);
 
 const hotelRoutes = require("./routes/hotel.route");
 app.use("/api/hotel", hotelRoutes);
+
+const bookingRoutes = require("./routes/booking.route");
+app.use("/api/booking", bookingRoutes);
 
 
 const PORT = process.env.EXPRESS_PORT;

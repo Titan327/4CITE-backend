@@ -77,7 +77,7 @@ async function updateMe(req, res) {
     try {
         const userId = req.user.id;
         const updatedField = req.body;
-        const keyObj = Object.keys(updatedField)
+        const keyObj = Object.keys(updatedField);
         const modifField = [
             'email',
             'name',
@@ -123,9 +123,50 @@ async function deleteMe(req, res) {
     }
 }
 
+async function updateUser(req, res){
+    try {
+        const userId = req.params.id;
+        const { email, name, surname, pseudo } = req.body;
+        const user = await User.findByPk(userId);
+
+        if (user) {
+            user.email = email || user.email;
+            user.name = name || user.name;
+            user.surname = surname || user.surname;
+            user.pseudo = pseudo || user.pseudo;
+
+            await user.save();
+            res.status(200).json(user);
+        } else {
+            res.status(404).json({ message: 'User not found.' });
+        }
+    } catch (error) {
+        console.error('Error updating user:', error);
+        return res.status(500).json({ error: "An error has occurred." });
+    }
+}
+
+async function deleteUser(req, res){
+    try {
+        const userId = req.params.id;
+        const user = await User.findByPk(userId);
+        if (user) {
+            await user.destroy();
+            res.status(200).json({ message: 'User deleted.' });
+        } else {
+            res.status(404).json({ message: 'User not found.' });
+        }
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        return res.status(500).json({ error: "An error has occurred." });
+    }
+}
+
 module.exports = {
     GetUserByField,
     getMe,
     updateMe,
     deleteMe,
+    updateUser,
+    deleteUser,
 };
