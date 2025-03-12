@@ -1,7 +1,6 @@
 const request = require('supertest');
 const express = require('express');
 
-// Mocks
 jest.mock('../models/hotel.model');
 jest.mock('../models/user.model');
 jest.mock('../middlewares/jwt_auth.middleware', () => jest.fn((req, res, next) => {
@@ -18,12 +17,10 @@ jest.mock('../middlewares/check_role.middleware', () => ({
     })
 }));
 
-// Imports
 const Hotel = require('../models/hotel.model');
 const User = require('../models/user.model');
 const hotelRoutes = require('../routes/hotel.route');
 
-// Setup Express app
 const app = express();
 app.use(express.json());
 app.use('/api/hotel', hotelRoutes);
@@ -31,12 +28,10 @@ app.use('/api/hotel', hotelRoutes);
 describe('Hotel Controller Tests', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        // Supprime les logs d'erreur et console.log pour garder la sortie de test propre
         jest.spyOn(console, 'error').mockImplementation(() => {});
         jest.spyOn(console, 'log').mockImplementation(() => {});
     });
 
-    // Tests pour getHotelByField
     describe('GET /api/hotel/search', () => {
         test('devrait renvoyer des hôtels filtrés par champ', async () => {
             const mockHotels = [
@@ -106,8 +101,8 @@ describe('Hotel Controller Tests', () => {
             expect(Hotel.findAndCountAll).toHaveBeenCalledWith({
                 attributes: expect.any(Array),
                 where: { name: 'Test' },
-                limit: 10,  // Valeur par défaut
-                offset: 0   // Valeur par défaut pour page=1
+                limit: 10,
+                offset: 0
             });
         });
 
@@ -131,7 +126,6 @@ describe('Hotel Controller Tests', () => {
         });
     });
 
-    // Tests pour createHotel (admin only)
     describe('POST /api/hotel', () => {
         test('devrait créer un nouvel hôtel', async () => {
             Hotel.create.mockResolvedValue({});
@@ -173,7 +167,6 @@ describe('Hotel Controller Tests', () => {
         });
     });
 
-    // Tests pour updateHotel (admin only)
     describe('PUT /api/hotel/:id', () => {
         test('devrait mettre à jour un hôtel existant', async () => {
             const mockHotel = {
@@ -202,7 +195,7 @@ describe('Hotel Controller Tests', () => {
             expect(Hotel.findByPk).toHaveBeenCalledWith('1');
             expect(mockHotel.name).toBe(updateData.name);
             expect(mockHotel.city).toBe(updateData.city);
-            expect(mockHotel.address).toBe('123 Old St'); // Champ non modifié
+            expect(mockHotel.address).toBe('123 Old St');
             expect(mockHotel.save).toHaveBeenCalled();
         });
 
@@ -229,7 +222,6 @@ describe('Hotel Controller Tests', () => {
         });
     });
 
-    // Tests pour deleteHotel (admin only)
     describe('DELETE /api/hotel/:id', () => {
         test('devrait supprimer un hôtel existant', async () => {
             const mockHotel = {
@@ -237,7 +229,6 @@ describe('Hotel Controller Tests', () => {
                 destroy: jest.fn().mockResolvedValue(true)
             };
 
-            // Note: Il y a une erreur dans le contrôleur original: il utilise User.findByPk au lieu de Hotel.findByPk
             User.findByPk.mockResolvedValue(mockHotel);
 
             const response = await request(app)

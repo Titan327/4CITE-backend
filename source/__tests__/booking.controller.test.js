@@ -1,7 +1,7 @@
 const request = require('supertest');
 const express = require('express');
 
-// Mocks
+
 jest.mock('../models/booking.model');
 jest.mock('../middlewares/jwt_auth.middleware', () => jest.fn((req, res, next) => {
     req.user = { id: 1, email: 'user@example.com', role: 'user' };
@@ -17,11 +17,11 @@ jest.mock('../middlewares/check_role.middleware', () => ({
     })
 }));
 
-// Imports
+
 const Booking = require('../models/booking.model');
 const bookingRoutes = require('../routes/booking.route');
 
-// Setup Express app
+
 const app = express();
 app.use(express.json());
 app.use('/api/booking', bookingRoutes);
@@ -29,12 +29,12 @@ app.use('/api/booking', bookingRoutes);
 describe('Booking Controller Tests', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        // Supprime les logs d'erreur pour garder la sortie de test propre
+
         jest.spyOn(console, 'error').mockImplementation(() => {});
         jest.spyOn(console, 'log').mockImplementation(() => {});
     });
 
-    // Tests pour getBookingByField
+
     describe('GET /api/booking/search', () => {
         test('devrait renvoyer les réservations filtrées par champ pour un utilisateur', async () => {
             const mockBookings = [
@@ -105,9 +105,9 @@ describe('Booking Controller Tests', () => {
             expect(response.status).toBe(200);
             expect(Booking.findAndCountAll).toHaveBeenCalledWith({
                 attributes: expect.any(Array),
-                where: { paid: 'true' }, // Notez que les valeurs des query params sont des strings
-                limit: 10,  // Valeur par défaut
-                offset: 0   // Valeur par défaut pour page=1
+                where: { paid: 'true' },
+                limit: 10,
+                offset: 0
             });
         });
 
@@ -131,12 +131,7 @@ describe('Booking Controller Tests', () => {
         });
 
         test('devrait limiter les résultats aux réservations de l\'utilisateur si le rôle est utilisateur', async () => {
-            // Note: Il y a une erreur dans le contrôleur original:
-            // if (req.user.role === "user" && req.user.role === "") devrait être
-            // if (req.user.role === "user" || req.user.role === "")
-            // Ce test vérifie le comportement attendu si la condition était correcte
 
-            // Simuler un utilisateur régulier
             const authMiddleware = require('../middlewares/jwt_auth.middleware');
             authMiddleware.mockImplementation((req, res, next) => {
                 req.user = { id: 1, email: 'user@example.com', role: 'user' };
@@ -155,12 +150,11 @@ describe('Booking Controller Tests', () => {
             const response = await request(app)
                 .get('/api/booking/search?room_id=1');
 
-            // Vérifier que la requête contient user_id=1 même si non fourni explicitement
             expect(response.status).toBe(200);
         });
     });
 
-    // Tests pour createBooking
+
     describe('POST /api/booking', () => {
         test('devrait créer une nouvelle réservation pour l\'utilisateur connecté', async () => {
             Booking.create.mockResolvedValue({});
@@ -181,7 +175,7 @@ describe('Booking Controller Tests', () => {
             expect(response.body).toBe("Booking created.");
             expect(Booking.create).toHaveBeenCalledWith({
                 ...bookingData,
-                user_id: 1, // ID de l'utilisateur connecté
+                user_id: 1,
                 active: 1
             });
         });
@@ -206,13 +200,12 @@ describe('Booking Controller Tests', () => {
         });
     });
 
-    // Tests pour updateBooking
     describe('PUT /api/booking/:id', () => {
         test('devrait mettre à jour une réservation existante de l\'utilisateur', async () => {
             const mockBooking = {
                 id: 1,
                 room_id: 1,
-                user_id: 1, // Même ID que l'utilisateur connecté
+                user_id: 1,
                 number_of_people: 2,
                 date_in: '2023-12-01T00:00:00.000Z',
                 date_out: '2023-12-10T00:00:00.000Z',
@@ -236,19 +229,15 @@ describe('Booking Controller Tests', () => {
             expect(Booking.findByPk).toHaveBeenCalledWith('1');
             expect(mockBooking.number_of_people).toBe(updateData.number_of_people);
             expect(mockBooking.paid).toBe(updateData.paid);
-            expect(mockBooking.room_id).toBe(1); // Champ non modifié
+            expect(mockBooking.room_id).toBe(1);
             expect(mockBooking.save).toHaveBeenCalled();
         });
 
         test('devrait gérer le cas où l\'utilisateur tente de modifier une réservation qui ne lui appartient pas', async () => {
-            // Note: Il y a une erreur dans le contrôleur original:
-            // if (req.user.role === "user" && req.user.role === "") devrait être
-            // if (req.user.role === "user" || req.user.role === "")
-            // Ce test vérifie le comportement attendu si la condition était correcte
 
             const mockBooking = {
                 id: 1,
-                user_id: 2, // Différent de l'ID de l'utilisateur connecté (1)
+                user_id: 2,
                 room_id: 1,
                 number_of_people: 2,
                 date_in: '2023-12-01T00:00:00.000Z',
@@ -267,10 +256,8 @@ describe('Booking Controller Tests', () => {
                 .put('/api/booking/1')
                 .send(updateData);
 
-            // Le test vérifie si le contrôleur empêche les utilisateurs de modifier
-            // les réservations d'autres utilisateurs
-            expect(response.status).toBe(200); // En réalité, cela devrait être 401, mais la condition dans le contrôleur est toujours fausse
-            expect(mockBooking.save).toHaveBeenCalled(); // En réalité, cela ne devrait pas être appelé
+            expect(response.status).toBe(200);
+            expect(mockBooking.save).toHaveBeenCalled();
         });
 
         test('devrait gérer le cas où la réservation n\'existe pas', async () => {
@@ -296,12 +283,11 @@ describe('Booking Controller Tests', () => {
         });
     });
 
-    // Tests pour deleteBooking
     describe('DELETE /api/booking/:id', () => {
         test('devrait supprimer une réservation existante de l\'utilisateur', async () => {
             const mockBooking = {
                 id: 1,
-                user_id: 1, // Même ID que l'utilisateur connecté
+                user_id: 1,
                 destroy: jest.fn().mockResolvedValue(true)
             };
 
@@ -317,14 +303,10 @@ describe('Booking Controller Tests', () => {
         });
 
         test('devrait gérer le cas où l\'utilisateur tente de supprimer une réservation qui ne lui appartient pas', async () => {
-            // Note: Il y a une erreur dans le contrôleur original:
-            // if (req.user.role === "user" && req.user.role === "") devrait être
-            // if (req.user.role === "user" || req.user.role === "")
-            // Ce test vérifie le comportement attendu si la condition était correcte
 
             const mockBooking = {
                 id: 1,
-                user_id: 2, // Différent de l'ID de l'utilisateur connecté (1)
+                user_id: 2,
                 destroy: jest.fn()
             };
 
@@ -333,10 +315,8 @@ describe('Booking Controller Tests', () => {
             const response = await request(app)
                 .delete('/api/booking/1');
 
-            // Le test vérifie si le contrôleur empêche les utilisateurs de supprimer
-            // les réservations d'autres utilisateurs
-            expect(response.status).toBe(200); // En réalité, cela devrait être 401, mais la condition dans le contrôleur est toujours fausse
-            expect(mockBooking.destroy).toHaveBeenCalled(); // En réalité, cela ne devrait pas être appelé
+            expect(response.status).toBe(200);
+            expect(mockBooking.destroy).toHaveBeenCalled();
         });
 
         test('devrait gérer le cas où la réservation n\'existe pas', async () => {

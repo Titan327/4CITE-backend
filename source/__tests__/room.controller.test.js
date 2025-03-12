@@ -1,7 +1,6 @@
 const request = require('supertest');
 const express = require('express');
 
-// Mocks
 jest.mock('../models/room.model');
 jest.mock('../middlewares/jwt_auth.middleware', () => jest.fn((req, res, next) => {
     req.user = { id: 1, email: 'admin@example.com', role: 'admin' };
@@ -17,11 +16,9 @@ jest.mock('../middlewares/check_role.middleware', () => ({
     })
 }));
 
-// Imports
 const Room = require('../models/room.model');
 const roomRoutes = require('../routes/room.route');
 
-// Setup Express app
 const app = express();
 app.use(express.json());
 app.use('/api/room', roomRoutes);
@@ -29,12 +26,10 @@ app.use('/api/room', roomRoutes);
 describe('Room Controller Tests', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        // Supprime les logs d'erreur pour garder la sortie de test propre
         jest.spyOn(console, 'error').mockImplementation(() => {});
         jest.spyOn(console, 'log').mockImplementation(() => {});
     });
 
-    // Tests pour getRoomByField
     describe('GET /api/room/search', () => {
         test('devrait renvoyer des chambres filtrées par champ', async () => {
             const mockRooms = [
@@ -103,9 +98,9 @@ describe('Room Controller Tests', () => {
             expect(response.status).toBe(200);
             expect(Room.findAndCountAll).toHaveBeenCalledWith({
                 attributes: expect.any(Array),
-                where: { max_nb_people: '2' }, // Notez que les valeurs des query params sont des strings
-                limit: 10,  // Valeur par défaut
-                offset: 0   // Valeur par défaut pour page=1
+                where: { max_nb_people: '2' },
+                limit: 10,
+                offset: 0
             });
         });
 
@@ -129,7 +124,6 @@ describe('Room Controller Tests', () => {
         });
     });
 
-    // Tests pour createRoom (admin only)
     describe('POST /api/room', () => {
         test('devrait créer une nouvelle chambre', async () => {
             Room.create.mockResolvedValue({});
@@ -171,7 +165,6 @@ describe('Room Controller Tests', () => {
         });
     });
 
-    // Tests pour updateRoom (admin only)
     describe('PUT /api/room/:id', () => {
         test('devrait mettre à jour une chambre existante', async () => {
             const mockRoom = {
@@ -200,7 +193,7 @@ describe('Room Controller Tests', () => {
             expect(Room.findByPk).toHaveBeenCalledWith('1');
             expect(mockRoom.type_room).toBe(updateData.type_room);
             expect(mockRoom.description).toBe(updateData.description);
-            expect(mockRoom.hotel_id).toBe(1); // Champ non modifié
+            expect(mockRoom.hotel_id).toBe(1);
             expect(mockRoom.save).toHaveBeenCalled();
         });
 
@@ -227,9 +220,6 @@ describe('Room Controller Tests', () => {
         });
 
         test('devrait identifier et signaler l\'erreur dans le code du contrôleur', async () => {
-            // Il y a une erreur dans le contrôleur: room.max_nb_people = max_nb_people || room.country;
-            // au lieu de: room.max_nb_people = max_nb_people || room.max_nb_people;
-
             const mockRoom = {
                 id: 1,
                 hotel_id: 1,
@@ -257,7 +247,6 @@ describe('Room Controller Tests', () => {
         });
     });
 
-    // Tests pour deleteRoom (admin only)
     describe('DELETE /api/room/:id', () => {
         test('devrait supprimer une chambre existante', async () => {
             const mockRoom = {

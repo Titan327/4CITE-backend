@@ -198,7 +198,7 @@ describe('Auth Controller Tests', () => {
         });
 
         test('devrait refuser la connexion avec un email non existant', async () => {
-            User.findOne.mockResolvedValue(null); // Aucun utilisateur trouvé
+            User.findOne.mockResolvedValue(null);
 
             const loginData = {
                 email: 'nonexistent@example.com',

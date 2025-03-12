@@ -2,7 +2,6 @@ const request = require('supertest');
 const express = require('express');
 const bcrypt = require('bcrypt');
 
-// Mocks
 jest.mock('../models/user.model');
 jest.mock('bcrypt');
 jest.mock('../middlewares/jwt_auth.middleware', () => jest.fn((req, res, next) => {
@@ -19,11 +18,9 @@ jest.mock('../middlewares/check_role.middleware', () => ({
   })
 }));
 
-// Imports
 const User = require('../models/user.model');
 const userRoutes = require('../routes/user.route');
 
-// Setup Express app
 const app = express();
 app.use(express.json());
 app.use('/api/user', userRoutes);
@@ -33,7 +30,6 @@ describe('User Controller Tests', () => {
     jest.clearAllMocks();
   });
 
-  // Tests pour getMe
   describe('GET /api/user/me', () => {
     test('devrait renvoyer les informations de l\'utilisateur connecté', async () => {
       const testUser = {
@@ -82,9 +78,6 @@ describe('User Controller Tests', () => {
     });
 
     test('devrait gérer le cas où l\'utilisateur n\'est pas trouvé', async () => {
-      // Le mock va résoudre à null, mais le code actuel utilise .then/.catch
-      // et ne vérifie pas explicitement si le résultat est null
-      // Il renvoie simplement un succès avec le résultat (même s'il est null)
       User.findOne.mockResolvedValue(null);
 
       const response = await request(app)
@@ -95,10 +88,9 @@ describe('User Controller Tests', () => {
     });
   });
 
-  // Tests pour updateMe
   describe('PUT /api/user/me', () => {
     test('devrait mettre à jour les champs d\'un utilisateur', async () => {
-      User.update.mockResolvedValue([1]); // Nombre de lignes affectées
+      User.update.mockResolvedValue([1]);
 
       const updateData = {
         name: 'Updated Name',
@@ -140,7 +132,7 @@ describe('User Controller Tests', () => {
 
     test('devrait rejeter les champs non autorisés', async () => {
       const updateData = {
-        role: 'admin', // Champ non autorisé à la modification
+        role: 'admin',
         name: 'Updated Name'
       };
 
@@ -169,10 +161,9 @@ describe('User Controller Tests', () => {
     });
   });
 
-  // Tests pour deleteMe
   describe('DELETE /api/user/me', () => {
     test('devrait supprimer l\'utilisateur connecté', async () => {
-      User.destroy.mockResolvedValue(1); // Nombre de lignes supprimées
+      User.destroy.mockResolvedValue(1);
 
       const response = await request(app)
           .delete('/api/user/me');
@@ -195,10 +186,8 @@ describe('User Controller Tests', () => {
     });
   });
 
-  // Tests pour GetUserByField (admin only)
   describe('GET /api/user/search', () => {
     beforeEach(() => {
-      // Mock le middleware pour simuler un utilisateur admin
       const adminMiddleware = require('../middlewares/jwt_auth.middleware');
       adminMiddleware.mockImplementation((req, res, next) => {
         req.user = { id: 1, email: 'admin@example.com', role: 'admin' };
@@ -271,17 +260,14 @@ describe('User Controller Tests', () => {
     });
   });
 
-  // Tests pour updateUser (admin only)
   describe('PUT /api/user/:id', () => {
     beforeEach(() => {
-      // Mock le middleware pour simuler un utilisateur admin
       const adminMiddleware = require('../middlewares/jwt_auth.middleware');
       adminMiddleware.mockImplementation((req, res, next) => {
         req.user = { id: 1, email: 'admin@example.com', role: 'admin' };
         next();
       });
 
-      // Supprime les logs d'erreur pour garder la sortie de test propre
       jest.spyOn(console, 'error').mockImplementation(() => {});
     });
 
@@ -337,17 +323,14 @@ describe('User Controller Tests', () => {
     });
   });
 
-  // Tests pour deleteUser (admin only)
   describe('DELETE /api/user', () => {
     beforeEach(() => {
-      // Mock le middleware pour simuler un utilisateur admin
       const adminMiddleware = require('../middlewares/jwt_auth.middleware');
       adminMiddleware.mockImplementation((req, res, next) => {
         req.user = { id: 1, email: 'admin@example.com', role: 'admin' };
         next();
       });
 
-      // Supprime les logs d'erreur pour garder la sortie de test propre
       jest.spyOn(console, 'error').mockImplementation(() => {});
     });
 
@@ -360,13 +343,12 @@ describe('User Controller Tests', () => {
 
       User.findByPk.mockResolvedValue(mockUser);
 
-      // La route correcte est '/api/user/:id' où l'ID est attendu comme paramètre d'URL
       const response = await request(app)
           .delete('/api/user/2');
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({ message: 'User deleted.' });
-      expect(User.findByPk).toHaveBeenCalledWith('2'); // L'ID est reçu comme string depuis l'URL
+      expect(User.findByPk).toHaveBeenCalledWith('2');
       expect(mockUser.destroy).toHaveBeenCalled();
     });
 
