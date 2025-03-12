@@ -11,8 +11,8 @@ router.get("/search",authenticateToken,check_role.isUser,bookingController.getBo
 //POST /api/booking
 router.post("/",authenticateToken,check_role.isUser,bookingController.createBooking);
 //PUT /api/booking
-router.put("/",authenticateToken,check_role.isUser,bookingController.updateBooking);
+router.put("/:id",authenticateToken,check_role.isUser,bookingController.updateBooking);
 //DELETE /api/booking
-router.delete("/",authenticateToken,check_role.isUser,bookingController.deleteBooking);
+router.delete("/:id",authenticateToken,check_role.isUser,bookingController.deleteBooking);
 
 module.exports = router;

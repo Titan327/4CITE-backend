@@ -670,12 +670,22 @@ paths:
           description: Booking created successfully
         '500':
           description: Internal server error
+  /booking/{id}:
     put:
+      summary: Update a booking
+      description: Allows users to update their own bookings and admins to update any booking.
+      operationId: updateBooking
       tags:
         - Booking
-      summary: Update a booking
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the booking to update. (Admin only)
+          schema:
+            type: string
       requestBody:
         required: true
         content:
@@ -683,43 +693,75 @@ paths:
             schema:
               type: object
               properties:
-                id:
-                  type: integer
                 room_id:
                   type: integer
+                user_id:
+                  type: integer
+                  description: ID of the user who made the booking.
                 number_of_people:
                   type: integer
+                  description: Number of people included in the booking.
                 date_in:
                   type: string
                   format: date
+                  description: Check-in date.
                 date_out:
                   type: string
                   format: date
+                  description: Check-out date.
                 paid:
                   type: boolean
+                  description: Whether the booking is paid.
       responses:
         '200':
-          description: Booking updated successfully
+          description: Booking updated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Booking updated."
+        '401':
+          description: Unauthorized access.
+        '404':
+          description: Booking not found.
         '500':
-          description: Internal server error
+          description: Internal server error.
+
     delete:
+      summary: Delete a booking
+      description: Allows users to delete their own bookings and admins to delete any booking. (Admin only)
+      operationId: deleteBooking
       tags:
         - Booking
-      summary: Delete a booking
       security:
         - bearerAuth: [ ]
       parameters:
-        - in: query
-          name: id
+        - name: id
+          in: path
+          required: true
+          description: ID of the booking to delete.
           schema:
             type: string
-          required: true
-          description: ID of the booking to delete
       responses:
         '200':
-          description: Booking deleted successfully
+          description: Booking deleted successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Booking deleted."
+        '401':
+          description: Unauthorized access.
+        '404':
+          description: Booking not found.
         '500':
-          description: Internal server error
+          description: Internal server error.
 
   /room/search:
     get:
