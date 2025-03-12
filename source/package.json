@@ -6,8 +6,8 @@
   "scripts": {
     "test": "jest",
     "test:watch": "nodemon --exec jest --legacy-watch",
-    "dev": "nodemon server.js --legacy-watch",
-    "start": "node server.js"
+    "dev": "nodemon index.js --legacy-watch",
+    "start": "node index.js"
   },
   "jest": {
     "testEnvironment": "node",
