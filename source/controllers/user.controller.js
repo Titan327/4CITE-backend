@@ -6,7 +6,7 @@ async function GetUserByField(req, res) {
     try {
         const param = req.query;
         const keyObj = Object.keys(param)
-        const searchField = ['id', 'email', 'pseudo', 'name', 'surname'];
+        const searchField = ['id', 'email', 'pseudo', 'name', 'surname', 'page', 'limit'];
 
         if (!keyObj.every((key) => searchField.includes(key))){
             return res.status(449).json({ error: "One of the fields cannot be used." });
@@ -136,7 +136,7 @@ async function updateUser(req, res){
             user.pseudo = pseudo || user.pseudo;
 
             await user.save();
-            res.status(200).json(user);
+            res.status(200).json({ message: 'User modified.' });
         } else {
             res.status(404).json({ message: 'User not found.' });
         }

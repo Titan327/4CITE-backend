@@ -1,12 +1,13 @@
 const Hotel = require('../models/hotel.model');
 const User = require("../models/user.model");
+const Room = require("../models/room.model");
 require('dotenv').config();
 
-async function getHotelByField(req, res) {
+async function getRoomByField(req, res) {
     try {
         const param = req.query;
         const keyObj = Object.keys(param);
-        const searchField = ['id', 'name', 'address', 'city', 'country', 'page', 'limit'];
+        const searchField = ['id', 'hotel_id', 'type_room', 'max_nb_people', 'number_of_room', 'page', 'limit'];
 
         if (!keyObj.every((key) => searchField.includes(key))) {
             return res.status(449).json({ error: "One of the fields cannot be used." });
@@ -20,13 +21,13 @@ async function getHotelByField(req, res) {
         delete req.query.limit;
 
         if (keyObj.length !== 0) {
-            await Hotel.findAndCountAll({
+            await Room.findAndCountAll({
                 attributes: [
                     'id',
-                    'name',
-                    'address',
-                    'city',
-                    'country',
+                    'hotel_id',
+                    'type_room',
+                    'max_nb_people',
+                    'number_of_room',
                     'description',
                     'createdAt',
                 ],
@@ -38,90 +39,86 @@ async function getHotelByField(req, res) {
 
                 return res.status(200).json({
                     success: {
-                        hotels: resultat.rows,
+                        rooms: resultat.rows,
                         totalCount: resultat.count,
                         totalPages: totalPages,
                         currentPage: page,
                     }
                 });
             }).catch((err) => {
-                console.log(err)
                 return res.status(500).json({ error: "An error has occurred." });
             });
         } else {
-            console.log("ici");
             return res.status(500).json({ error: "An error has occurred." });
         }
     } catch (error) {
-        console.log(error);
         return res.status(500).json({ error: 'An error has occurred.' });
     }
 }
 
-
-async function createHotel(req, res){
+async function createRoom(req, res){
     try {
-        const { name, address, city, country, description } = req.body;
+        const { hotel_id, type_room, max_nb_people, number_of_room, description } = req.body;
 
-        await Hotel.create({
-            name,
-            address,
-            city,
-            country,
+        await Room.create({
+            hotel_id,
+            type_room,
+            max_nb_people,
+            number_of_room,
             description
         });
 
-        res.status(201).json({ success: "Hotel created." });
+        res.status(201).json({ success: "Room created." });
     } catch (error) {
-        console.error('Error creating hotel:', error);
+        console.error('Error creating room:', error);
         return res.status(500).json({ error: 'An error has occurred.' });
     }
 }
 
-async function updateHotel(req, res){
+async function updateRoom(req, res){
     try {
-        const hotelId = req.params.id;
-        const { name, address, city, country, description } = req.body;
+        const roomId = req.params.id;
+        const { hotel_id, type_room, max_nb_people, number_of_room, description } = req.body;
 
-        const hotel = await Hotel.findByPk(hotelId);
-        if (hotel) {
-            hotel.name = name || hotel.name;
-            hotel.address = address || hotel.address;
-            hotel.city = city || hotel.city;
-            hotel.country = country || hotel.country;
-            hotel.description = description || hotel.description;
+        const room = await Room.findByPk(roomId);
+        if (room) {
+            room.hotel_id = hotel_id || room.hotel_id;
+            room.type_room = type_room || room.type_room;
+            room.max_nb_people = max_nb_people || room.country;
+            room.number_of_room = number_of_room || room.number_of_room;
+            room.description = description || room.description;
 
-            await hotel.save();
-            res.status(200).json({ success: "Hotel updated." });
+            await room.save();
+            res.status(200).json({ success: "Room updated." });
         } else {
-            res.status(404).json({ error: 'Hotel not found.' });
+            res.status(404).json({ error: 'Room not found.' });
         }
     } catch (error) {
-        console.error('Error updating hotel:', error);
+        console.error('Error updating room:', error);
         return res.status(500).json({ error: 'An error has occurred.' });
     }
 }
 
-async function deleteHotel(req, res){
+async function deleteRoom(req, res){
     try {
-        const hotelId = req.params.id;
-        const hotel = await User.findByPk(hotelId);
-        if (hotel) {
-            await hotel.destroy();
-            res.status(200).json({ success: 'Hotel deleted.' });
+        const roomId = req.params.id;
+        const room = await Room.findByPk(roomId);
+        if (room) {
+            await room.destroy();
+            res.status(200).json({ success: 'Room deleted.' });
         } else {
-            res.status(404).json({ error: 'Hotel not found.' });
+            res.status(404).json({ error: 'Room not found.' });
         }
     } catch (error) {
-        console.error('Error deleting hotel:', error);
+        console.error('Error deleting Room:', error);
         return res.status(500).json({ error: 'An error has occurred.' });
     }
 
 }
 
 module.exports = {
-    getHotelByField,
-    createHotel,
-    updateHotel,
-    deleteHotel,
+    getRoomByField,
+    createRoom,
+    updateRoom,
+    deleteRoom,
 };

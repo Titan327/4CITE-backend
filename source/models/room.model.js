@@ -36,13 +36,13 @@ const RoomModel = sequelize.define('Rooms', {
     },
     active: {
         type: DataTypes.BOOLEAN,
-        allowNull: false
+        allowNull: false,
+        defaultValue: true
     },
 }, {
     timestamps: true,
     tableName: 'rooms'
 });
-
 
 RoomModel.associate = () => {
     RoomModel.belongsTo(Hotel, { foreignKey: 'hotel_id', as: 'hotel' });

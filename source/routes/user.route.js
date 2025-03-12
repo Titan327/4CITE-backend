@@ -17,7 +17,7 @@ router.delete("/me",authenticateToken,UserController.deleteMe);
 //GET /api/user/search?field={field}
 router.get("/search",authenticateToken,check_role.isAdmin,UserController.GetUserByField);
 //PUT /api/user/
-router.put("/",authenticateToken,check_role.isAdmin,UserController.updateUser);
+router.put("/:id",authenticateToken,check_role.isAdmin,UserController.updateUser);
 //DELETE /api/user/
 router.delete("/",authenticateToken,check_role.isAdmin,UserController.deleteUser);
 

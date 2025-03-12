@@ -5,10 +5,12 @@ function authenticateToken(req, res, next) {
     const authHeader = req.headers.authorization;
 
     if (!authHeader){
+        console.log("la");
         return res.status(401).json({ message: "You are not authorized to access this." });
     }
 
     if(authHeader.split(' ').length !== 2){
+        console.log(authHeader);
         return res.status(401).json({ message: "You are not authorized to access this." });
     }
 
@@ -19,6 +21,7 @@ function authenticateToken(req, res, next) {
     }
 
     if (!token) {
+        console.log('ici');
         return res.status(401).json({ message: "You are not authorized to access this." });
     }
 

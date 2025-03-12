@@ -13,7 +13,9 @@ async function getBookingByField(req, res) {
             'date_in',
             'date_out',
             'paid',
-            'active'
+            'active',
+            'page',
+            'limit',
         ];
 
         if (!keyObj.every((key) => searchField.includes(key))) {
@@ -28,6 +30,9 @@ async function getBookingByField(req, res) {
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
 
+        delete req.query.page;
+        delete req.query.limit;
+
         if (keyObj.length !== 0) {
             const Bookings = await Booking.findAndCountAll({
                 attributes: [
@@ -39,7 +44,6 @@ async function getBookingByField(req, res) {
                     'date_out',
                     'paid',
                     'active',
-                    'description',
                     'createdAt',
                 ],
                 where: param,
@@ -50,11 +54,12 @@ async function getBookingByField(req, res) {
 
                 return res.status(200).json({
                     success: {
-                        Bookings,
+                        bookings: resultat.rows,
                         totalPages: totalPages
                     }
                 });
             }).catch((err) => {
+                console.log(err);
                 return res.status(500).json({ error: "An error has occurred." });
             });
         } else {
@@ -68,6 +73,8 @@ async function getBookingByField(req, res) {
 async function createBooking(req, res){
     try {
         const token_user = req.user;
+
+        //console.log(token_user.id);
 
         const { room_id, number_of_people, date_in, date_out, paid } = req.body;
 
@@ -90,8 +97,6 @@ async function createBooking(req, res){
 
 async function updateBooking(req, res){
     try {
-
-
         const bookingId = req.params.id;
         const { room_id, user_id, number_of_people, date_in, date_out, paid } = req.body;
 

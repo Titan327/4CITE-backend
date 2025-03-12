@@ -43,7 +43,8 @@ const BookingModel = sequelize.define('Booking', {
     },
     active: {
         type: DataTypes.BOOLEAN,
-        allowNull: false
+        allowNull: false,
+        defaultValue: true
     },
 }, {
     timestamps: true,

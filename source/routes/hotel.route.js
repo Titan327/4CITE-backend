@@ -11,8 +11,8 @@ router.get("/search",hotelController.getHotelByField);
 //POST /api/hotel
 router.post("/",authenticateToken,check_role.isAdmin,hotelController.createHotel);
 //PUT /api/hotel
-router.put("/",authenticateToken,check_role.isAdmin,hotelController.updateHotel);
+router.put("/:id",authenticateToken,check_role.isAdmin,hotelController.updateHotel);
 //DELETE /api/hotel
-router.delete("/",authenticateToken,check_role.isAdmin,hotelController.deleteHotel);
+router.delete("/:id",authenticateToken,check_role.isAdmin,hotelController.deleteHotel);
 
 module.exports = router;

@@ -37,6 +37,9 @@ app.use("/api/hotel", hotelRoutes);
 const bookingRoutes = require("./routes/booking.route");
 app.use("/api/booking", bookingRoutes);
 
+const roomRoutes = require("./routes/room.route");
+app.use("/api/room", roomRoutes);
+
 
 const PORT = process.env.EXPRESS_PORT;
 app.listen(PORT, () => console.log(`Server up and running on http://localhost:${PORT}`))

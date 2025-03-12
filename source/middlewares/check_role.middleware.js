@@ -2,6 +2,8 @@ function isAdmin(req, res, next) {
 
     const userData = req.user;
 
+    console.log(userData);
+
     if (userData.role === "admin"){
         next();
     }else {

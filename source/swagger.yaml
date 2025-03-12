@@ -5,6 +5,14 @@ info:
   version: 1.0.0
 servers:
   - url: http://localhost:3001/api
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
 paths:
   /auth/register:
     post:
@@ -69,7 +77,7 @@ paths:
         - User
       summary: Update the authenticated user
       security:
-        - bearerAuth: [ ]
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -107,9 +115,9 @@ paths:
     get:
       tags:
         - User
-      summary: Search for users by field
+      summary: Search for users by field (Admin only)
       security:
-        - bearerAuth: [ ]
+        - bearerAuth: []
       parameters:
         - in: query
           name: id
@@ -172,13 +180,21 @@ paths:
           description: One of the fields cannot be used
         '500':
           description: Internal server error
-  '/user':
+
+  /user/{id}:
     put:
       tags:
         - User
-      summary: Update a user (Admin only)
       security:
         - bearerAuth: [ ]
+      summary: Update user details by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: User ID to update (Admin only)
       requestBody:
         required: true
         content:
@@ -186,21 +202,43 @@ paths:
             schema:
               type: object
               properties:
-                id:
-                  type: string
                 email:
                   type: string
+                  description: User email
                 name:
                   type: string
+                  description: User name
                 surname:
                   type: string
+                  description: User surname
                 pseudo:
                   type: string
+                  description: User pseudo
       responses:
         '200':
           description: User updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  email:
+                    type: string
+                  name:
+                    type: string
+                  surname:
+                    type: string
+                  pseudo:
+                    type: string
+        '400':
+          description: Invalid input data
+        '404':
+          description: User not found
         '500':
           description: Internal server error
+  '/user':
     delete:
       tags:
         - User
@@ -222,50 +260,59 @@ paths:
 
   /hotel/search:
     get:
+      summary: Search for hotels based on query parameters
+      description: Allows searching hotels by specific fields (e.g., id, name, address, city, country).
+      operationId: getHotelByField
       tags:
         - Hotel
-      summary: Search for hotels by field
       parameters:
-        - in: query
-          name: id
-          schema:
-            type: integer
-          description: Hotel ID
-        - in: query
-          name: name
+        - name: id
+          in: query
+          required: false
+          description: ID of the hotel.
           schema:
             type: string
-          description: Hotel name
-        - in: query
-          name: address
+        - name: name
+          in: query
+          required: false
+          description: Name of the hotel.
           schema:
             type: string
-          description: Hotel address
-        - in: query
-          name: city
+        - name: address
+          in: query
+          required: false
+          description: Address of the hotel.
           schema:
             type: string
-          description: Hotel city
-        - in: query
-          name: country
+        - name: city
+          in: query
+          required: false
+          description: City where the hotel is located.
           schema:
             type: string
-          description: Hotel country
-        - in: query
-          name: page
+        - name: country
+          in: query
+          required: false
+          description: Country where the hotel is located.
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          description: The page number to fetch (default is 1).
           schema:
             type: integer
             default: 1
-          description: Page number for pagination
-        - in: query
-          name: limit
+        - name: limit
+          in: query
+          required: false
+          description: The number of hotels to return per page (default is 10).
           schema:
             type: integer
             default: 10
-          description: Number of hotels per page
       responses:
         '200':
-          description: Hotels retrieved successfully
+          description: Hotels found based on the search query.
           content:
             application/json:
               schema:
@@ -301,18 +348,35 @@ paths:
                       currentPage:
                         type: integer
         '400':
-          description: Invalid search field provided
-        '449':
-          description: One of the fields cannot be used
+          description: Invalid query parameter (e.g., unsupported fields).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "One of the fields cannot be used."
         '500':
-          description: Internal server error
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "An error has occurred."
+      security:
+        - BearerAuth: [ ]
+
   '/hotel':
     post:
       tags:
         - Hotel
       summary: Create a hotel (Admin only)
       security:
-        - bearerAuth: [ ]
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -335,12 +399,22 @@ paths:
           description: Hotel created successfully
         '500':
           description: Internal server error
+  /hotel/{id}:
     put:
+      summary: Update a hotel (Admin only)
+      description: Allows updating the information of an existing hotel.
+      operationId: updateHotel
+      security:
+        - bearerAuth: []
       tags:
         - Hotel
-      summary: Update a hotel (Admin only)
-      security:
-        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the hotel to update.
+          schema:
+            type: string
       requestBody:
         required: true
         content:
@@ -348,44 +422,115 @@ paths:
             schema:
               type: object
               properties:
-                id:
-                  type: string
                 name:
                   type: string
+                  description: The name of the hotel.
                 address:
                   type: string
+                  description: The address of the hotel.
                 city:
                   type: string
+                  description: The city where the hotel is located.
                 country:
                   type: string
+                  description: The country where the hotel is located.
                 description:
                   type: string
+                  description: A description of the hotel.
+              required:
+                - name
+                - address
+                - city
+                - country
       responses:
         '200':
-          description: Hotel updated successfully
+          description: Hotel successfully updated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    example: "Hotel updated."
+        '400':
+          description: Invalid request (e.g., bad data format).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid input."
+        '404':
+          description: Hotel not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Hotel not found."
         '500':
-          description: Internal server error
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "An error has occurred."
     delete:
+      summary: Delete a hotel (Admin only)
+      description: Allows deleting an existing hotel using its ID.
+      operationId: deleteHotel
       tags:
         - Hotel
-      summary: Delete a hotel (Admin only)
-      security:
-        - bearerAuth: [ ]
       parameters:
-        - in: query
-          name: id
+        - name: id
+          in: path
+          required: true
+          description: ID of the hotel to delete.
           schema:
             type: string
-          required: true
-          description: ID of the hotel to delete
       responses:
         '200':
-          description: Hotel deleted successfully
+          description: Hotel successfully deleted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    example: "Hotel deleted."
+        '404':
+          description: Hotel not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Hotel not found."
         '500':
-          description: Internal server error
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "An error has occurred."
+      security:
+        - bearerAuth: []
 
-
-  /bookings/search:
+  /booking/search:
     get:
       tags:
         - Booking
@@ -500,7 +645,7 @@ paths:
         - Booking
       summary: Create a booking
       security:
-        - bearerAuth: [ ]
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -509,7 +654,7 @@ paths:
               type: object
               properties:
                 room_id:
-                  type: string
+                  type: integer
                 number_of_people:
                   type: integer
                 date_in:
@@ -530,7 +675,7 @@ paths:
         - Booking
       summary: Update a booking
       security:
-        - bearerAuth: [ ]
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -539,9 +684,9 @@ paths:
               type: object
               properties:
                 id:
-                  type: string
+                  type: integer
                 room_id:
-                  type: string
+                  type: integer
                 number_of_people:
                   type: integer
                 date_in:
@@ -576,9 +721,246 @@ paths:
         '500':
           description: Internal server error
 
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+  /room/search:
+    get:
+      summary: Search for rooms based on query parameters
+      description: Allows searching for rooms using different fields such as hotel_id, type, and capacity.
+      operationId: getRoomByField
+      tags:
+        - Room
+      parameters:
+        - name: id
+          in: query
+          required: false
+          description: ID of the room.
+          schema:
+            type: string
+        - name: hotel_id
+          in: query
+          required: false
+          description: ID of the hotel the room belongs to.
+          schema:
+            type: string
+        - name: type_room
+          in: query
+          required: false
+          description: Type of room (e.g., suite, deluxe).
+          schema:
+            type: string
+        - name: max_nb_people
+          in: query
+          required: false
+          description: Maximum number of people allowed in the room.
+          schema:
+            type: integer
+        - name: number_of_room
+          in: query
+          required: false
+          description: Total number of such rooms available.
+          schema:
+            type: integer
+        - name: page
+          in: query
+          required: false
+          description: Page number for pagination.
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          description: Number of results per page.
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Successfully retrieved rooms based on filters.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: object
+                    properties:
+                      rooms:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            hotel_id:
+                              type: integer
+                            type_room:
+                              type: string
+                            max_nb_people:
+                              type: integer
+                            number_of_room:
+                              type: integer
+                            description:
+                              type: string
+                            createdAt:
+                              type: string
+                              format: date-time
+                      totalCount:
+                        type: integer
+                      totalPages:
+                        type: integer
+                      currentPage:
+                        type: integer
+        '400':
+          description: Invalid query parameter.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "One of the fields cannot be used."
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "An error has occurred."
+
+  /room:
+    post:
+      summary: Create a new room
+      description: Allows admins to create a new hotel room. (Admin only)
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Room
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hotel_id:
+                  type: integer
+                  description: ID of the hotel the room belongs to.
+                type_room:
+                  type: string
+                  description: Type of room (e.g., suite, standard).
+                max_nb_people:
+                  type: integer
+                  description: Maximum number of people allowed.
+                number_of_room:
+                  type: integer
+                  description: Total number of rooms available of this type.
+                description:
+                  type: string
+                  description: Additional details about the room.
+              required:
+                - hotel_id
+                - type_room
+                - max_nb_people
+                - number_of_room
+      responses:
+        '201':
+          description: Room successfully created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    example: "Room created."
+        '500':
+          description: Internal server error.
+
+  /room/{id}:
+    put:
+      summary: Update a room
+      description: Allows admins to update room details. (Admin only)
+      operationId: updateRoom
+      tags:
+        - Room
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the room to update.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hotel_id:
+                  type: integer
+                  description: ID of the hotel the room belongs to.
+                type_room:
+                  type: string
+                  description: Type of room.
+                max_nb_people:
+                  type: integer
+                  description: Maximum number of people.
+                number_of_room:
+                  type: integer
+                  description: Total number of such rooms.
+                description:
+                  type: string
+                  description: Room description.
+      responses:
+        '200':
+          description: Room updated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    example: "Room updated."
+        '404':
+          description: Room not found.
+        '500':
+          description: Internal server error.
+
+    delete:
+      summary: Delete a room
+      description: Allows admins to delete a room. (Admin only)
+      operationId: deleteRoom
+      tags:
+        - Room
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the room to delete.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Room deleted successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                    example: "Room deleted."
+        '404':
+          description: Room not found.
+        '500':
+          description: Internal server error.
