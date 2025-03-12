@@ -1,230 +1,261 @@
-// __tests__/auth.controller.test.js
 const request = require('supertest');
 const express = require('express');
-const User = require('../models/user.model');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-require('dotenv').config({ path: '.env.test' }); // Utiliser les variables d'environnement de test
 
-// Configuration de l'application Express pour les tests
+jest.mock('../models/user.model');
+jest.mock('bcrypt');
+jest.mock('jsonwebtoken');
+
+const User = require('../models/user.model');
+const authRoutes = require('../routes/auth.route');
+
 const app = express();
 app.use(express.json());
-
-// Import des routes d'authentification
-const authRoutes = require('../routes/auth.routes'); // Ajustez le chemin selon votre structure
 app.use('/api/auth', authRoutes);
 
-// Si vous avez une configuration spécifique pour la base de données de test
-const { sequelize } = require('../config/database'); // Ajustez selon votre structure de projet
-
-describe('AuthController', () => {
-    // Avant tous les tests, synchroniser la base de données
-    beforeAll(async () => {
-        // Forcer la synchronisation pour recréer les tables à chaque lancement
-        await sequelize.sync({ force: true });
+describe('Auth Controller Tests', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
     });
 
-    // Après tous les tests, fermer la connexion à la base de données
-    afterAll(async () => {
-        await sequelize.close();
-    });
+    describe('POST /api/auth/register', () => {
+        test('devrait créer un nouvel utilisateur avec succès', async () => {
+            User.findOne.mockResolvedValue(null)
+            User.create.mockResolvedValue({});
+            bcrypt.hash.mockResolvedValue('hashedPassword123');
 
-    // Avant chaque test, nettoyer les tables
-    beforeEach(async () => {
-        await User.destroy({ where: {}, truncate: true });
-    });
-
-    describe('register', () => {
-        test('devrait enregistrer un nouvel utilisateur avec succès', async () => {
             const userData = {
-                name: 'John',
-                surname: 'Doe',
-                pseudo: 'johndoe',
-                email: 'john@example.com',
-                password: 'Password1@'
+                email: 'test@example.com',
+                pseudo: 'testuser',
+                password: 'Password1!',
+                name: 'Test',
+                surname: 'User',
             };
 
             const response = await request(app)
                 .post('/api/auth/register')
-                .send(userData)
-                .set('Accept', 'application/json');
+                .send(userData);
 
             expect(response.status).toBe(201);
-            expect(response.body).toHaveProperty('success', 'Registered user.');
-
-            // Vérifier que l'utilisateur a été créé dans la base de données
-            const user = await User.findOne({ where: { email: userData.email } });
-            expect(user).not.toBeNull();
-            expect(user.name).toBe(userData.name);
-            expect(user.pseudo).toBe(userData.pseudo);
-            expect(user.role).toBe('user');
-            expect(user.active).toBe(1);
-
-            // Vérifier que le mot de passe a été hashé (il ne doit pas être en clair)
-            expect(user.password).not.toBe(userData.password);
+            expect(response.body).toEqual({ success: 'Registered user.' });
+            expect(User.findOne).toHaveBeenCalledWith({
+                where: { email: userData.email },
+            });
+            expect(bcrypt.hash).toHaveBeenCalledWith(userData.password, 10);
+            expect(User.create).toHaveBeenCalledWith({
+                email: userData.email,
+                pseudo: userData.pseudo,
+                password: 'hashedPassword123',
+                name: userData.name,
+                surname: userData.surname,
+                role: 'user',
+                active: 1,
+            });
         });
 
         test('devrait retourner une erreur si l\'email est déjà utilisé', async () => {
-            // Créer d'abord un utilisateur
-            await User.create({
-                name: 'John',
-                surname: 'Doe',
-                pseudo: 'johndoe',
-                email: 'john@example.com',
-                password: await bcrypt.hash('Password1@', 10),
-                role: 'user',
-                active: 1
-            });
+            User.findOne.mockResolvedValue({ id: 1, email: 'test@example.com' });
 
-            // Essayer de créer un utilisateur avec le même email
             const userData = {
-                name: 'Jane',
-                surname: 'Smith',
-                pseudo: 'janesmith',
-                email: 'john@example.com', // Même email
-                password: 'Password2@'
+                email: 'test@example.com',
+                pseudo: 'testuser',
+                password: 'Password1!',
+                name: 'Test',
+                surname: 'User',
             };
 
             const response = await request(app)
                 .post('/api/auth/register')
-                .send(userData)
-                .set('Accept', 'application/json');
+                .send(userData);
 
             expect(response.status).toBe(449);
-            expect(response.body).toHaveProperty('error', 'Email already used.');
-
-            // Vérifier qu'un seul utilisateur existe avec cet email
-            const users = await User.findAll({ where: { email: userData.email } });
-            expect(users.length).toBe(1);
+            expect(response.body).toEqual({ error: 'Email already used.' });
+            expect(User.findOne).toHaveBeenCalledWith({
+                where: { email: userData.email },
+            });
+            expect(User.create).not.toHaveBeenCalled();
         });
 
         test('devrait valider la longueur du nom', async () => {
             const userData = {
-                name: 'A'.repeat(51), // Nom trop long
-                surname: 'Doe',
-                pseudo: 'johndoe',
-                email: 'john@example.com',
-                password: 'Password1@'
+                email: 'test@example.com',
+                pseudo: 'testuser',
+                password: 'Password1!',
+                name: 'A'.repeat(51),
+                surname: 'User',
             };
 
             const response = await request(app)
                 .post('/api/auth/register')
-                .send(userData)
-                .set('Accept', 'application/json');
+                .send(userData);
 
             expect(response.status).toBe(449);
-            expect(response.body).toHaveProperty('error', 'Name must be less than 50 character.');
-
-            // Vérifier qu'aucun utilisateur n'a été créé
-            const user = await User.findOne({ where: { email: userData.email } });
-            expect(user).toBeNull();
+            expect(response.body).toEqual({ error: 'Name must be less than 50 character.' });
+            expect(User.findOne).not.toHaveBeenCalled();
         });
 
-        // Ajouter les autres tests de validation...
-
-        test('devrait valider la complexité du mot de passe', async () => {
+        test('devrait valider la longueur du pseudo', async () => {
             const userData = {
-                name: 'John',
-                surname: 'Doe',
-                pseudo: 'johndoe',
-                email: 'john@example.com',
-                password: 'password' // Mot de passe trop simple
+                email: 'test@example.com',
+                pseudo: 'A'.repeat(21),
+                password: 'Password1!',
+                name: 'Test',
+                surname: 'User',
             };
 
             const response = await request(app)
                 .post('/api/auth/register')
-                .send(userData)
-                .set('Accept', 'application/json');
+                .send(userData);
 
             expect(response.status).toBe(449);
-            expect(response.body).toHaveProperty('error', 'The password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character.');
+            expect(response.body).toEqual({ error: 'Pseudo must be less than 20 character.' });
+        });
+
+        test('devrait valider le format du mot de passe', async () => {
+            const userData = {
+                email: 'test@example.com',
+                pseudo: 'testuser',
+                password: 'password',
+                name: 'Test',
+                surname: 'User',
+            };
+
+            const response = await request(app)
+                .post('/api/auth/register')
+                .send(userData);
+
+            expect(response.status).toBe(449);
+            expect(response.body).toEqual({
+                error: 'The password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character.'
+            });
+        });
+
+        test('devrait gérer les erreurs serveur lors de l\'inscription', async () => {
+            User.findOne.mockRejectedValue(new Error('Database error'));
+
+            const userData = {
+                email: 'test@example.com',
+                pseudo: 'testuser',
+                password: 'Password1!',
+                name: 'Test',
+                surname: 'User',
+            };
+
+            const response = await request(app)
+                .post('/api/auth/register')
+                .send(userData);
+
+            expect(response.status).toBe(500);
+            expect(response.body).toEqual({ error: 'An error has occurred' });
         });
     });
 
-    describe('login', () => {
-        test('devrait connecter un utilisateur avec succès', async () => {
-            // Créer d'abord un utilisateur pour le test
-            const password = 'Password1@';
-            const hashedPassword = await bcrypt.hash(password, 10);
-
-            await User.create({
-                name: 'John',
-                surname: 'Doe',
-                pseudo: 'johndoe',
-                email: 'john@example.com',
-                password: hashedPassword,
+    describe('POST /api/auth/login', () => {
+        test('devrait connecter un utilisateur avec succès et retourner un token', async () => {
+            const testUser = {
+                id: 1,
+                email: 'test@example.com',
+                name: 'Test',
+                surname: 'User',
+                pseudo: 'testuser',
+                password: 'hashedPassword123',
                 role: 'user',
-                active: 1
-            });
+            };
 
-            // Tenter de se connecter
+            User.findOne.mockResolvedValue(testUser);
+            bcrypt.compare.mockResolvedValue(true);
+            jwt.sign.mockReturnValue('fake-jwt-token');
+
+            process.env.JWT_KEY = 'test-jwt-key';
+
             const loginData = {
-                email: 'john@example.com',
-                password: password
+                email: 'test@example.com',
+                password: 'Password1!',
             };
 
             const response = await request(app)
                 .post('/api/auth/login')
-                .send(loginData)
-                .set('Accept', 'application/json');
+                .send(loginData);
 
             expect(response.status).toBe(200);
-            expect(response.body).toHaveProperty('token');
-
-            // Vérifier que le token est valide
-            const decoded = jwt.verify(response.body.token, process.env.JWT_KEY);
-            expect(decoded).toHaveProperty('email', loginData.email);
-            expect(decoded).toHaveProperty('role', 'user');
-        });
-
-        test('devrait rejeter la connexion avec un mot de passe incorrect', async () => {
-            // Créer d'abord un utilisateur pour le test
-            const password = 'Password1@';
-            const hashedPassword = await bcrypt.hash(password, 10);
-
-            await User.create({
-                name: 'John',
-                surname: 'Doe',
-                pseudo: 'johndoe',
-                email: 'john@example.com',
-                password: hashedPassword,
-                role: 'user',
-                active: 1
+            expect(response.body).toEqual({ token: 'fake-jwt-token' });
+            expect(User.findOne).toHaveBeenCalledWith({
+                where: { email: loginData.email },
             });
-
-            // Tenter de se connecter avec un mauvais mot de passe
-            const loginData = {
-                email: 'john@example.com',
-                password: 'WrongPassword1@'
-            };
-
-            const response = await request(app)
-                .post('/api/auth/login')
-                .send(loginData)
-                .set('Accept', 'application/json');
-
-            expect(response.status).toBe(449);
-            expect(response.body).toHaveProperty('error', 'Wrong password or email.');
+            expect(bcrypt.compare).toHaveBeenCalledWith(loginData.password, testUser.password);
+            expect(jwt.sign).toHaveBeenCalledWith(
+                {
+                    id: testUser.id,
+                    email: testUser.email,
+                    name: testUser.name,
+                    surname: testUser.surname,
+                    pseudo: testUser.pseudo,
+                    role: testUser.role,
+                },
+                'test-jwt-key'
+            );
         });
 
-        test('devrait gérer le cas où l\'utilisateur n\'existe pas', async () => {
+        test('devrait refuser la connexion avec un email non existant', async () => {
+            User.findOne.mockResolvedValue(null); // Aucun utilisateur trouvé
+
             const loginData = {
                 email: 'nonexistent@example.com',
-                password: 'Password1@'
+                password: 'Password1!',
             };
-
-            // Dans votre contrôleur actuel, cela générerait une erreur car
-            // user serait null lorsque vous essayez d'accéder à user["password"]
-            // Vous pourriez améliorer votre contrôleur pour vérifier si user existe d'abord
 
             const response = await request(app)
                 .post('/api/auth/login')
-                .send(loginData)
-                .set('Accept', 'application/json');
+                .send(loginData);
 
-            // Avec votre code actuel, cela devrait retourner une erreur 500
+            expect(response.status).toBe(449);
+            expect(response.body).toEqual({ error: 'Wrong password or email.' });
+            expect(bcrypt.compare).not.toHaveBeenCalled();
+            expect(jwt.sign).not.toHaveBeenCalled();
+        });
+
+        test('devrait refuser la connexion avec un mot de passe incorrect', async () => {
+            const testUser = {
+                id: 1,
+                email: 'test@example.com',
+                password: 'hashedPassword123',
+            };
+
+            User.findOne.mockResolvedValue(testUser);
+            bcrypt.compare.mockResolvedValue(false);
+
+            const loginData = {
+                email: 'test@example.com',
+                password: 'WrongPassword1!',
+            };
+
+            const response = await request(app)
+                .post('/api/auth/login')
+                .send(loginData);
+
+            expect(response.status).toBe(449);
+            expect(response.body).toEqual({ error: 'Wrong password or email.' });
+            expect(bcrypt.compare).toHaveBeenCalledWith(loginData.password, testUser.password);
+            expect(jwt.sign).not.toHaveBeenCalled();
+        });
+
+        test('devrait gérer les erreurs serveur lors de la connexion', async () => {
+            jest.spyOn(console, 'error').mockImplementation(() => {});
+            jest.spyOn(console, 'log').mockImplementation(() => {});
+            User.findOne.mockRejectedValue(new Error('Database error'));
+
+            const loginData = {
+                email: 'test@example.com',
+                password: 'Password1!',
+            };
+
+            const response = await request(app)
+                .post('/api/auth/login')
+                .send(loginData);
+
             expect(response.status).toBe(500);
-            expect(response.body).toHaveProperty('error', 'An error has occurred');
+            expect(response.body).toEqual({ error: 'An error has occurred' });
         });
     });
 });

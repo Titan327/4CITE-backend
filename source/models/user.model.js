@@ -35,7 +35,7 @@ const UserModel = sequelize.define('User', {
     active: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue: true
+        defaultValue: 1
     },
 }, {
     timestamps: true,

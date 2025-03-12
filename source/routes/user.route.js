@@ -19,6 +19,6 @@ router.get("/search",authenticateToken,check_role.isAdmin,UserController.GetUser
 //PUT /api/user/
 router.put("/:id",authenticateToken,check_role.isAdmin,UserController.updateUser);
 //DELETE /api/user/
-router.delete("/",authenticateToken,check_role.isAdmin,UserController.deleteUser);
+router.delete("/:id",authenticateToken,check_role.isAdmin,UserController.deleteUser);
 
 module.exports = router;

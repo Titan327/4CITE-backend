@@ -68,7 +68,7 @@ async function login(req,res) {
             }
         });
 
-        if (await bcrypt.compare(data.password, user["password"])){
+        if (user && await bcrypt.compare(data.password, user["password"])){
             const dataJWT = {
                 id: user["id"],
                 email: user["email"],
@@ -94,3 +94,4 @@ module.exports = {
     register,
     login,
 };
+

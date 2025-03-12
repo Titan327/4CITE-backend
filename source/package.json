@@ -4,9 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
+    "test:watch": "nodemon --exec jest --setupFiles=./jest.setup.js --legacy-watch",
     "dev": "nodemon server.js --legacy-watch",
     "start": "node server.js"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "modulePathIgnorePatterns": ["__mocks__"]
   },
   "keywords": [],
   "author": "",
@@ -21,6 +25,7 @@
     "mysql2": "^3.13.0",
     "sequelize": "^6.37.6",
     "sequelize-cli": "^6.6.2",
+    "sqlite3": "^5.1.7",
     "supertest": "^7.0.0",
     "swagger-ui-express": "^5.0.1",
     "yamljs": "^0.3.0"
