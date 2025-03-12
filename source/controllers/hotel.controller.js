@@ -25,6 +25,7 @@ async function getHotelByField(req, res) {
                     'id',
                     'name',
                     'address',
+                    'image',
                     'city',
                     'country',
                     'description',
@@ -61,11 +62,12 @@ async function getHotelByField(req, res) {
 
 async function createHotel(req, res){
     try {
-        const { name, address, city, country, description } = req.body;
+        const { name, address, image, city, country, description } = req.body;
 
         await Hotel.create({
             name,
             address,
+            image,
             city,
             country,
             description
@@ -81,12 +83,13 @@ async function createHotel(req, res){
 async function updateHotel(req, res){
     try {
         const hotelId = req.params.id;
-        const { name, address, city, country, description } = req.body;
+        const { name, address, image, city, country, description } = req.body;
 
         const hotel = await Hotel.findByPk(hotelId);
         if (hotel) {
             hotel.name = name || hotel.name;
             hotel.address = address || hotel.address;
+            hotel.image = image || hotel.image;
             hotel.city = city || hotel.city;
             hotel.country = country || hotel.country;
             hotel.description = description || hotel.description;

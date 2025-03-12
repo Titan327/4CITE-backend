@@ -9,6 +9,10 @@ const HotelModel = sequelize.define('Hotels', {
         autoIncrement: true,
         primaryKey: true
     },
+    image: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
     name: {
         type: DataTypes.STRING,
         allowNull: false

@@ -388,6 +388,8 @@ paths:
                   type: string
                 address:
                   type: string
+                image:
+                  type: string
                 city:
                   type: string
                 country:
@@ -428,6 +430,9 @@ paths:
                 address:
                   type: string
                   description: The address of the hotel.
+                image:
+                  type: string
+                  description: image of hotel.
                 city:
                   type: string
                   description: The city where the hotel is located.
