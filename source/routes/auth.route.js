@@ -11,6 +11,4 @@ router.post("/login",AuthController.login);
 //PUT /api/user/setpublic
 //router.put("/setpublic",authenticateToken,UserController.setPublicParam);
 
-
-
 module.exports = router;
