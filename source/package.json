@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test:test": "nodemon --exec jest --setupFiles=./jest.setup.js --legacy-watch",
+    "test": "node jest",
     "test:watch": "nodemon --exec jest --legacy-watch",
     "dev": "nodemon server.js --legacy-watch",
     "start": "node server.js"
