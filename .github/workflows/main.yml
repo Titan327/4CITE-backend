@@ -19,6 +19,7 @@ jobs:
       with:
         node-version: '16.x'
         cache: 'npm'
+        cache-dependency-path: 'source/package-lock.json'
 
     - name: Déplacement dans le dossier source et exécution des tests
       run: |
